@@ -1,0 +1,285 @@
+import dayjs from 'dayjs';
+import PropTypes from 'prop-types';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import {
+  Box,
+  Card,
+  Chip,
+  Stack,
+  Button,
+  Dialog,
+  Popover,
+  MenuItem,
+  Typography,
+  IconButton,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
+} from '@mui/material';
+
+import Iconify from 'src/components/iconify';
+
+export default function UserCard({ row, handleDelete }) {
+  const [openMenu, setOpenMenu] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [openSaveDialog, setOpenSaveDialog] = useState(false);
+  const [userDetails, setUserDetails] = useState(null);
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const isNormalUser = currentUser.role === 'normal';
+  const isApproved = row.status === 'approved';
+  const canShowRestrictedActions = !isNormalUser && !isApproved;
+
+  const navigate = useNavigate();
+
+  const handleOpenMenu = (event) => {
+    setOpenMenu(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setOpenMenu(null);
+  };
+
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  const handleOpenSaveDialog = () => {
+    setOpenSaveDialog(true);
+  };
+
+  const handleCloseSaveDialog = () => {
+    setOpenSaveDialog(false);
+  };
+
+  const onDeleteConfirmed = () => {
+    handleDelete(row.id);
+    handleCloseDialog();
+    handleCloseMenu();
+  };
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      if (row.user_id) {
+        try {
+          const response = await fetch(`https://api.digiflexanand.in/api/users/${row.user_id}`);
+          if (!response.ok) throw new Error('Failed to fetch user');
+          const data = await response.json();
+          setUserDetails(data);
+        } catch (error) {
+          console.error('Error fetching user:', error);
+        }
+      }
+    };
+
+    fetchUserDetails();
+  }, [row.user_id]);
+
+  const isMobile = /iPhone|Android|iPad/i.test(navigator.userAgent);
+  const baseURL = isMobile
+    ? 'https://api.whatsapp.com/send'
+    : 'https://wa.me/send';
+
+  let whatsappLink = '';
+
+  if (userDetails?.phone) {
+    const phone = '91' + userDetails.phone.replace(/[^\d]/g, '');
+    const message =
+      `Hello ${userDetails.first_name} ${userDetails.last_name},\n\n` +
+      `Here are your measurement appointment details:\n` +
+      `📌 Name: ${row.customer_name}\n` +
+      `📞 Phone: +91 ${row.customer_mobile}\n` +
+      `📍 Address: ${row.customer_address || 'N/A'}\n` +
+      `📅 Date: ${row.measurement_date
+        ? dayjs(row.measurement_date).format('DD/MM/YYYY')
+        : 'N/A'}\n\n` +
+      `🔗 Application Link: https://web.digiflexanand.in`;
+
+    whatsappLink = `${baseURL}?phone=${phone}&text=${encodeURIComponent(message)}`;
+  }
+
+  const handleApprove = async () => {
+    try {
+      const response = await fetch(`https://api.digiflexanand.in/api/measurements/${row.id}/approve`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) throw new Error('Failed to approve measurement');
+
+      const data = await response.json();
+      console.log('Measurement approved:', data);
+
+      // Optional: refresh UI or notify user
+      window.location.reload(); // or refetch data via parent component
+    } catch (error) {
+      console.error('Error approving measurement:', error);
+      alert('Failed to approve measurement');
+    }
+  };
+
+  const handleCardClick = () => {
+    navigate('/dashboard/user/new', {
+      state: { id: row.id },
+    });
+  };
+
+
+  return (
+    <>
+      <Card
+        onClick={handleCardClick}
+        sx={{
+          p: 3,
+          borderRadius: 3,
+          boxShadow: 3,
+          backgroundColor: '#fff',
+          position: 'relative',
+        }}
+      >
+        <Stack spacing={2}>
+          <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+            <Box>
+              <Typography variant="h6">{row.customer_name} {row.status === 'created' && (
+                <Chip label="Created" color="default" variant="outlined" />
+              )}
+                {row.status === 'assigned' && (
+                  <Chip label="Assigned" color="warning" variant="outlined" />
+                )}
+                {row.status === 'in_progress' && (
+                  <Chip label="In Progress" color="primary" variant="outlined" />
+                )}
+                {row.status === 'approved' && (
+                  <Chip label="Approved" color="success" variant="outlined" />
+                )}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Measurement Date: {row.measurement_date
+                  ? dayjs(row.measurement_date, 'YYYY-MM-DD').format('DD/MM/YYYY')
+                  : ''}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Mobile: {row.customer_mobile}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Assigned User :{userDetails
+                  ? `${userDetails.first_name} ${userDetails.last_name} (${userDetails.phone})`
+                  : 'Loading...'}
+              </Typography>
+
+              <Typography>
+
+                {canShowRestrictedActions && whatsappLink && (
+                  <MenuItem
+                    component="a"
+                    href={whatsappLink}
+                     onClick={(e) => e.stopPropagation()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Iconify icon="ic:baseline-whatsapp" sx={{ mr: 2, color: 'green' }} />
+                    WhatsApp
+                  </MenuItem>
+                )}
+              </Typography>
+            </Box>
+
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation(); // ✅ This prevents row click
+                handleOpenMenu(e);
+              }}>
+              <Iconify icon="eva:more-vertical-fill" />
+            </IconButton>
+          </Stack>
+
+        </Stack>
+      </Card>
+
+      <Popover
+        open={!!openMenu}
+        anchorEl={openMenu}
+        onClose={handleCloseMenu}
+        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{
+          sx: { width: 140 },
+        }}
+      >
+
+        {canShowRestrictedActions && whatsappLink && (
+          <MenuItem
+            component="a"
+            href={whatsappLink}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Iconify icon="ic:baseline-whatsapp" sx={{ mr: 2, color: 'green' }} />
+            WhatsApp
+          </MenuItem>
+        )}
+
+        {canShowRestrictedActions && row.status === 'in_progress' && <MenuItem
+          onClick={handleOpenSaveDialog}
+          sx={{ color: 'success.main' }}
+        >
+          <Iconify icon="bx:save" sx={{ mr: 2 }} />
+          Save
+        </MenuItem>}
+
+        {canShowRestrictedActions && <MenuItem onClick={handleOpenDialog} sx={{ color: 'error.main' }}>
+          <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
+          Delete
+        </MenuItem>}
+      </Popover>
+
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Delete Measurement</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete <strong>{row.name}</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={onDeleteConfirmed} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openSaveDialog}
+        onClose={handleCloseSaveDialog}
+      >
+        <DialogTitle>Save Measurement</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to Save ?
+            This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseSaveDialog}>Cancel</Button>
+          <Button
+            onClick={handleApprove}
+            color="success"
+            variant="contained"
+          >
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+}
+
+UserCard.propTypes = {
+  row: PropTypes.object.isRequired,
+  handleDelete: PropTypes.func.isRequired,
+};
