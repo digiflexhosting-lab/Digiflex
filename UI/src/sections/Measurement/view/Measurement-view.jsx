@@ -17,6 +17,8 @@ import {
   TablePagination,
 } from '@mui/material';
 
+import { DIGIFLEX_API } from 'src/utils/backendUrl';
+
 import Iconify from 'src/components/iconify';
 import Scrollbar from 'src/components/scrollbar';
 
@@ -51,7 +53,7 @@ export default function UserPage() {
 
   const fetchMeasurements = async () => {
     try {
-      const res = await fetch('https://api.digiflexanand.in/api/measurements');
+      const res = await fetch(`${DIGIFLEX_API}measurements`);
       const json = await res.json();
       setData(json);
     } catch (err) {
@@ -61,7 +63,7 @@ export default function UserPage() {
 
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`https://api.digiflexanand.in/api/measurements/${id}`, {
+      const res = await fetch(`${DIGIFLEX_API}measurements/${id}`, {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error('Failed to delete');

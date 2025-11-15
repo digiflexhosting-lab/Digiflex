@@ -20,6 +20,8 @@ import {
   DialogContentText,
 } from '@mui/material';
 
+import { DIGIFLEX_API } from 'src/utils/backendUrl';
+
 import Iconify from 'src/components/iconify';
 
 export default function UserCard({ row, handleDelete }) {
@@ -68,7 +70,7 @@ export default function UserCard({ row, handleDelete }) {
     const fetchUserDetails = async () => {
       if (row.user_id) {
         try {
-          const response = await fetch(`https://api.digiflexanand.in/api/users/${row.user_id}`);
+          const response = await fetch(`${DIGIFLEX_API}users/${row.user_id}`);
           if (!response.ok) throw new Error('Failed to fetch user');
           const data = await response.json();
           setUserDetails(data);
@@ -106,7 +108,7 @@ export default function UserCard({ row, handleDelete }) {
 
   const handleApprove = async () => {
     try {
-      const response = await fetch(`https://api.digiflexanand.in/api/measurements/${row.id}/approve`, {
+      const response = await fetch(`${DIGIFLEX_API}measurements/${row.id}/approve`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
       });

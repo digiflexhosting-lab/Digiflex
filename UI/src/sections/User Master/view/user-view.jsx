@@ -17,6 +17,8 @@ import {
   TablePagination,
 } from '@mui/material';
 
+import { DIGIFLEX_API } from 'src/utils/backendUrl';
+
 import Iconify from 'src/components/iconify';
 import Scrollbar from 'src/components/scrollbar';
 
@@ -47,7 +49,7 @@ export default function UserPage() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('https://api.digiflexanand.in/api/users');
+      const res = await fetch(`${DIGIFLEX_API}users`);
       const data = await res.json();
       setUsers(data);
     } catch (error) {
@@ -66,7 +68,7 @@ export default function UserPage() {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`https://api.digiflexanand.in/api/users/${id}`, {
+      await fetch(`${DIGIFLEX_API}users/${id}`, {
         method: 'DELETE',
       });
       fetchUsers(); // Refresh list

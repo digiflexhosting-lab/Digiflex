@@ -21,6 +21,8 @@ import {
   CircularProgress,
 } from '@mui/material';
 
+import { DIGIFLEX, DIGIFLEX_API } from 'src/utils/backendUrl';
+
 import Iconify from 'src/components/iconify';
 
 export default function UserFormPage() {
@@ -54,7 +56,7 @@ const closePreview = () => {
   
   useEffect(() => {
     if (measurementId) {
-      fetch(`https://api.digiflexanand.in/api/measurements/${measurementId}`)
+      fetch(`${DIGIFLEX_API}measurements/${measurementId}`)
         .then((res) => res.json())
         .then((data) => {
           setExistingData(data);
@@ -98,8 +100,8 @@ const closePreview = () => {
           notes: area.notes || '',
 photos: (area.photo_urls || []).map((url) => ({
   preview: url
-    .replace(/^http:\/\/192\.168\.0\.140:8080/, 'https://api.digiflexanand.in')
-    .replace(/^\/+/, 'https://api.digiflexanand.in/'),
+    .replace(/^http:\/\/192\.168\.0\.140:8080/, `${DIGIFLEX}`)
+    .replace(/^\/+/, `${DIGIFLEX}/`),
   file: null,
 })),
 
@@ -114,7 +116,7 @@ photos: (area.photo_urls || []).map((url) => ({
     const fetchSelectedUser = async () => {
       if (existingData?.user_id) {
         try {
-          const res = await fetch(`https://api.digiflexanand.in/api/users/${existingData.user_id}`);
+          const res = await fetch(`${DIGIFLEX_API}users/${existingData.user_id}`);
           if (!res.ok) throw new Error('Failed to fetch selected user');
           const userData = await res.json();
           setFormValues(prev => ({
@@ -150,7 +152,7 @@ photos: (area.photo_urls || []).map((url) => ({
   useEffect(() => {
 const fetchUsers = async () => {
   try {
-    const response = await fetch('https://api.digiflexanand.in/api/users');
+    const response = await fetch(`${DIGIFLEX_API}users`);
     if (!response.ok) throw new Error('Failed to fetch users');
     const data = await response.json();
     
@@ -317,7 +319,7 @@ const handleAddPhotos = (index, files) => {
               if (p.file) {
                 const formData = new FormData();
                 formData.append('photos', p.file);
-                const res = await fetch('https://api.digiflexanand.in/api/uploads/upload', {
+                const res = await fetch(`${DIGIFLEX_API}uploads/upload`, {
                   method: 'POST',
                   body: formData,
                 });
@@ -350,8 +352,8 @@ const handleAddPhotos = (index, files) => {
 
 const method = measurementId ? 'PUT' : 'POST';
 const url = measurementId
-  ? `https://api.digiflexanand.in/api/measurements/${measurementId}`
-  : 'https://api.digiflexanand.in/api/measurements';
+  ? `${DIGIFLEX_API}measurements/${measurementId}`
+  : `${DIGIFLEX_API}measurements`;
 
       const response = await fetch(url, {
         method,

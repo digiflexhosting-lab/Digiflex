@@ -16,7 +16,7 @@ if (email === BYPASS_EMAIL && password === BYPASS_PASSWORD) {
     first_name: 'Admin',
     last_name: 'Bypass',
     email: email,
-    role: 'ADMIN',
+    role: 'admin',
   });
 }
 

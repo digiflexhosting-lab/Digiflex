@@ -5,6 +5,8 @@ import Container from '@mui/material/Container';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 
+import { DIGIFLEX_API } from 'src/utils/backendUrl';
+
 import AppOrderTimeline from '../app-order-timeline';
 import AppCurrentVisits from '../app-current-visits';
 import AppWidgetSummary from '../app-widget-summary';
@@ -29,7 +31,7 @@ export default function AppView() {
 
   const fetchMeasurements = async () => {
     try {
-      const res = await fetch('https://api.digiflexanand.in/api/measurements');
+      const res = await fetch(`${DIGIFLEX_API}measurements`);
       const json = await res.json();
       setMeasurements(json);
     } catch (error) {
@@ -39,7 +41,7 @@ export default function AppView() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('https://api.digiflexanand.in/api/users');
+      const res = await fetch(`${DIGIFLEX_API}users`);
       const json = await res.json();
       setUsers(json);
     } catch (error) {

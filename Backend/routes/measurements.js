@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const { v4: uuidv4 } = require('uuid');
+const fs = require('fs');
+const path = require('path');
 
 // ==========================
 // CREATE Measurement
@@ -148,8 +150,32 @@ await client.query(
   [customer_name, customer_mobile, customer_address, measurement_date, user_id, newStatus, id]
 );
 
-    await client.query(`DELETE FROM area_photos WHERE area_id IN (SELECT id FROM measurement_areas WHERE measurement_id = $1)`, [id]);
-    await client.query(`DELETE FROM measurement_areas WHERE measurement_id = $1`, [id]);
+// 1. Get all photo URLs before deleting
+const photos = await client.query(
+  `SELECT photo_url FROM area_photos 
+   WHERE area_id IN (SELECT id FROM measurement_areas WHERE measurement_id = $1)`,
+  [id]
+);
+
+// 2. Delete files from disk
+for (const p of photos.rows) {
+  const filePath = path.join(__dirname, "..", p.photo_url); // adjust based on your folder structure
+
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+  }
+}
+
+// 3. Delete from DB
+await client.query(
+  `DELETE FROM area_photos WHERE area_id IN (SELECT id FROM measurement_areas WHERE measurement_id = $1)`,
+  [id]
+);
+await client.query(
+  `DELETE FROM measurement_areas WHERE measurement_id = $1`,
+  [id]
+);
+
 
     for (const area of areas) {
       const areaId = uuidv4();

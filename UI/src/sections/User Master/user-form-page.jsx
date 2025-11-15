@@ -12,6 +12,8 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import { DIGIFLEX_API } from 'src/utils/backendUrl';
+
 export default function UserFormDialog({ open, onClose, existingData, onSaved }) {
   const isEdit = !!existingData;
 
@@ -77,17 +79,18 @@ const handleSubmit = async () => {
       email: formValues.email,
       phone: formValues.phone,
       role: formValues.role,
+      password_hash : 123
     };
 
     if (!isEdit) {
-      const response = await fetch('https://api.digiflexanand.in/api/users', {
+      const response = await fetch(`${DIGIFLEX_API}users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error('Failed to create user');
     } else {
-      const response = await fetch(`https://api.digiflexanand.in/api/users/${existingData.user_id}`, {
+      const response = await fetch(`${DIGIFLEX_API}users/${existingData.user_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

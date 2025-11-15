@@ -26,7 +26,6 @@ const MENU_OPTIONS = [
 export default function AccountPopover() {
   const [open, setOpen] = useState(null);
   const user = JSON.parse(localStorage.getItem('user'));
-  console.log(user)
 
   const router = useRouter();
 
